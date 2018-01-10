@@ -21,12 +21,16 @@ var compilation = tsb.create({
     target: 'es5',
     module: 'commonjs',
     declaration: false,
-    lib: ["es2015", "es2015.promise", "dom", "es5"]
+    lib: ["es2015", "es2015.promise", "dom", "es5"],
+    typeRoots: [
+        "node_modules/@types",
+        "node_modules/web-ext-types"
+    ]
 });
 
 // add custom browserify options here
 var customOpts = {
-    entries: ['src/main.js'],
+    entries: ['src/js/main.js'],
     debug: true
 };
 var opts = assign({}, watchify.args, customOpts);
@@ -34,9 +38,9 @@ var b = watchify(browserify(opts));
 
 // Set up src ts build task
 gulp.task("srcCompileTS", function () {
-    return gulp.src('src/**/*.ts')
+    return gulp.src('src/ts/**/*.ts')
         .pipe(compilation()) // <- new compilation
-        .pipe(gulp.dest('src/'));
+        .pipe(gulp.dest('src/js/'));
 
 });
 
@@ -80,7 +84,7 @@ gulp.task('notifySRCComplete', ['srcCompileJS'], function () {
 gulp.task('default', ['srcCompileTS', 'srcCompileJS', 'notifySRCComplete'], function () {
     // ----------------------------------------------------------------
     // SRC files watch
-    gulp.watch('src/**/*.ts', ['srcCompileTS', 'srcCompileJS', 'notifySRCComplete'], function () {
+    gulp.watch('src/ts/**/*.ts', ['srcCompileTS', 'srcCompileJS', 'notifySRCComplete'], function () {
         // Run srcCompileTS
         console.log("Src TS Watch fired!");
     });
