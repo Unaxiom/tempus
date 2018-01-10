@@ -1,0 +1,43 @@
+{
+  "name": "tempus",
+  "version": "1.0.0",
+  "description": "WebExtension that tracks duration on each website",
+  "main": "extension/js/bundle.src.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.unaxiom.com:Unaxiom/tempus.git"
+  },
+  "keywords": [
+    "WebExtensions",
+    "Chrome",
+    "Firefox",
+    "Duration",
+    "Time",
+    "Tracking"
+  ],
+  "author": "Pratheek Adidela",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^15.0.0",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-shell": "^0.6.5",
+    "gulp-sourcemaps": "^2.6.3",
+    "gulp-tsb": "^2.0.5",
+    "gulp-typescript": "^3.2.3",
+    "gulp-uglify": "^3.0.0",
+    "gulp-uglifycss": "^1.0.9",
+    "gulp-util": "^3.0.8",
+    "lodash.assign": "^4.2.0",
+    "tsify": "^3.0.4",
+    "typescript": "^2.6.2",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0",
+    "watchify": "^3.9.0",
+    "web-ext": "^2.2.2",
+    "web-ext-types": "github:kelseasy/web-ext-types"
+  }
+}
