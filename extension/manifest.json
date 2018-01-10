@@ -1,0 +1,44 @@
+{
+    "description": "Tracks the time spent on each website",
+    "manifest_version": 2,
+    "name": "Tempus",
+    "author": "Pratheek Adidela",
+    "permissions": [
+        "alarms",
+        "storage",
+        "tabs"
+    ],
+    "background": {
+        "scripts": [
+            "js/bundle.src.js"
+        ]
+    },
+    "version": "1.0",
+    "icons": {
+        "16": "images/icon16.png",
+        "32": "images/icon32.png",
+        "48": "images/icon48.png",
+        "64": "images/icon64.png",
+        "128": "images/icon128.png",
+        "256": "images/icon256.png"
+    },
+    "incognito": "spanning",
+    "browser_action": {
+        "browser_style": true,
+        "default_title": "Open Tempus",
+        "default_popup": "index.html",
+        "default_icon": {
+            "16": "images/icon16.png",
+            "32": "images/icon32.png",
+            "48": "images/icon48.png",
+            "64": "images/icon64.png",
+            "128": "images/icon128.png",
+            "256": "images/icon256.png"
+        }
+    },
+    "applications": {
+        "gecko": {
+            "strict_min_version": "55.0a2"
+        }
+    }
+}
