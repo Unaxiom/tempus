@@ -29,12 +29,22 @@ var compilation = tsb.create({
 });
 
 // add custom browserify options here
-var customOpts = {
+var backgroundOpts = {
     entries: ['src/js/main.js'],
     debug: true
 };
-var opts = assign({}, watchify.args, customOpts);
-var b = watchify(browserify(opts));
+
+var uiOpts = {
+    entries: ['src/js/ui.js'],
+    debug: true
+};
+
+
+var backgroundOpts = assign({}, watchify.args, backgroundOpts);
+var uiOpts = assign({}, watchify.args, uiOpts);
+
+var backgroundBundlerVariable = watchify(browserify(backgroundOpts));
+var uiBundlerVariable = watchify(browserify(uiOpts));
 
 // Set up src ts build task
 gulp.task("srcCompileTS", function () {
@@ -44,11 +54,14 @@ gulp.task("srcCompileTS", function () {
 
 });
 
-b.on('update', bundle); // on any dep update, runs the bundler
-b.on('log', gutil.log); // output build logs to terminal
+backgroundBundlerVariable.on('update', backgroundBundler); // on any dep update, runs the bundler
+backgroundBundlerVariable.on('log', gutil.log); // output build logs to terminal
 
-function bundle() {
-    return b.bundle()
+uiBundlerVariable.on('update', uiBundler); // on any dep update, runs the bundler
+uiBundlerVariable.on('log', gutil.log); // output build logs to terminal
+
+function backgroundBundler() {
+    return backgroundBundlerVariable.bundle()
         // log errors if they happen
         .on('error', gutil.log.bind(gutil, 'Browserify Error'))
         .pipe(source('bundle.src.js'))
@@ -64,7 +77,28 @@ function bundle() {
         .pipe(gulp.dest('extension/js/'));
 }
 
-gulp.task("srcCompileJS", ["srcCompileTS"], bundle)
+function uiBundler() {
+    return uiBundlerVariable.bundle()
+        // log errors if they happen
+        .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+        .pipe(source('ui.src.js'))
+        // optional, remove if you don't need to buffer file contents
+        .pipe(buffer())
+        // optional, remove if you dont want sourcemaps
+        .pipe(sourcemaps.init({
+            loadMaps: true
+        })) // loads map from browserify file
+        // Add transformation tasks to the pipeline here.
+        // .pipe(uglify())
+        .pipe(sourcemaps.write('./')) // writes .map file
+        .pipe(gulp.dest('extension/js/'));
+}
+
+
+gulp.task("srcCompileJS", ["srcCompileTS"], function () {
+    backgroundBundler();
+    uiBundler();
+});
 
 // gulp.task("cleanJS", ["srcCompileTS", "srcCompileJS"], function() {
 //     return gulp.src('src/**/*.js', {read: false})
