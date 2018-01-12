@@ -44,3 +44,15 @@ export interface tab {
     width?: number
     windowId: number
 }
+
+/**Stores the information of each datum object */
+export interface tempusStruct {
+    /**Stores the domain name */
+    domain: string
+    /**Stores if this site is currently active */
+    active: boolean
+    /**Stores the previously activated at timestamp */
+    activatedAt: number
+    /**Stores the duration of this website */
+    lapsed: number
+}
