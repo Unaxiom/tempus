@@ -1,0 +1,24 @@
+body {
+    max-height: 300px;
+}
+
+.title-column {
+    margin: 10px 0px;
+}
+
+.title {
+    font-size: 2rem;
+}
+
+th {
+    text-align: center;
+}
+
+td {
+    text-align: center;
+}
+
+tr.green {
+    background-color: #1b5e20;
+    color: white;
+}
