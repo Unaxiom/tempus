@@ -1,77 +1,108 @@
 import tabStructs = require('./tab-structs');
 import baseStructs = require('./base-structs');
-// let browser: any;
-let text = <HTMLHeadingElement>document.getElementById("internal-text");
+import commons = require("./commons");
 
-async function runSomething() {
-    // text.innerHTML += "The extension has loaded<br>";
-    // console.log("The extension has run");
-    // console.log("Has run again");
-    let tabs = await browser.tabs.query({
-        status: 'complete'
-    });
-    console.log(tabs);
-    for (var i = 0; i < tabs.length; i++) {
-        let tab = tabs[i];
-        let sentence = `${tab.url}: ${tab.active}`;
-        console.log(sentence);
-        let data = await browser.storage.local.get();
-        // console.log(data);
-        if (data["data"] == undefined) {
-            console.log("Found undefined");
-            data = {};
-            data["data"] = sentence
+/**Appends to the list if the object is not already present in the list */
+async function appendToTempusObjectArray(object: baseStructs.tempusStruct) {
+    let tempusObject = await commons.fetchTempusObject();
+    let found = false;
+    for (let i = 0; i < tempusObject.tempusArray.length; i++) {
+        let temp = tempusObject.tempusArray[i];
+        if (temp.domain === object.domain) {
+            found = true;
+            // Interchange the values
+            if (temp.active) {
+                // Don't change anything, since this is already being considered
+            } else if (object.active) {
+                temp.active = object.active;
+                temp.activatedAt = object.activatedAt;
+                if (object.lapsed > 0) {
+                    temp.lapsed = object.lapsed | 0;
+                }
+                tempusObject.tempusArray[i] = temp;
+            }
+            break;
         }
-        data["data"] += sentence
-        // console.log(data);
-        await browser.storage.local.set(data)
     }
-
-    let data = await browser.storage.local.get();
-    console.log(data);
-    text.innerHTML = <string>data["data"];
-    await browser.storage.local.clear();
-    console.log("Cleared data")
+    if (!found) {
+        tempusObject.tempusArray.push(object);
+    }
+    await commons.storeTempusObject(tempusObject);
 }
 
-// runSomething();
+/**Sets the active */
+async function toggleTabsActiveState(tempusTabs: baseStructs.tempusStruct[], active: boolean) {
+    // Sets these tabs to active and sets every other tab to inactive
+    let object = await commons.fetchTempusObject();
+    let allTabsDomains = object.tempusArray.map(temp => {
+        return temp.domain;
+    })
+    let activeDomains = tempusTabs.map(temp => {
+        return temp.domain;
+    })
 
-/**Handles a tab activation event of the browser */
-// function handleTabActivation(object{ tabId: number, windowId: number }) {
-//     text.innerHTML += "Tab has been activated<br>";
-//     // console.log("Tab activated");
-//     // console.log("Tab ID is " + tabInfo.tabId);
-//     // console.log("Window ID is " + tabInfo.windowId);
-// }
+    for (let i = 0; i < allTabsDomains.length; i++) {
+        let availableTab = allTabsDomains[i];
+        if (activeDomains.indexOf(availableTab) > -1) {
+            if (active) {
+                object.tempusArray[i].active = true;
+                object.tempusArray[i].activatedAt = new Date().getTime();
+            } else {
+                object.tempusArray[i].active = false;
+                object.tempusArray[i].activatedAt = 0;
+            }
+        } else {
+            object.tempusArray[i].active = false;
+        }
+    }
+    await commons.storeTempusObject(object);
+}
 
 /**Handles a tab updation event of the browser */
-function handleTabUpdation(tabId: number, changeInfo: baseStructs.changeInfo, tab: browser.tabs.Tab) {
-    let sentence = `Tab has been updated Status: ${tab.status}, URL: ${changeInfo.url}<br>`;
-    text.innerHTML += sentence
+async function handleTabUpdation(tabId: number, changeInfo: baseStructs.changeInfo, tab: browser.tabs.Tab) {
+    await commons.closePreviouslyUnclosedTabs();
+    await commons.updateOpenTabs();
     if (changeInfo.status === "complete") {
         // Get all the tabs here
-        let sentence = `New tab -> ${tab.url}`;
-        text.innerHTML += sentence;
-
+        let newTab = <baseStructs.tempusStruct>{
+            domain: commons.returnDomainFromURL(tab.url),
+            active: tab.active,
+            lapsed: 0
+        }
+        if (newTab.active) {
+            newTab.activatedAt = new Date().getTime();
+        }
+        appendToTempusObjectArray(newTab);
     }
-    // console.log("Tab updated");
-    // console.log(tabInfo.tabId, tabInfo.changeInfo, tabInfo.tab);
+}
+
+/**Function that fetches all the available tabs and processes them */
+async function recountAllActiveTabs() {
+    let temp = await browser.tabs.query({
+        active: true
+    });
+    let allTabs = temp.map(tab => {
+        let localTab = <baseStructs.tempusStruct>{
+            domain: commons.returnDomainFromURL(tab.url),
+            active: tab.active,
+            lapsed: 0,
+            activatedAt: 0
+        }
+        if (localTab.active) {
+            localTab.activatedAt = new Date().getTime();
+        }
+        return localTab
+    });
+    toggleTabsActiveState(allTabs, true);
 }
 
 // Create the event handler for onActivated
-browser.tabs.onActivated.addListener(async function (obj: any) {
-    let sentence = `${obj.tabId} is the new activation`;
-    console.log(sentence);
-    let temp = await browser.tabs.query({
-        windowId: obj.windowId,
-        index: obj.tabId,
-    });
-    console.log(temp);
-    text.innerHTML += sentence;
-});
+browser.tabs.onActivated.addListener(recountAllActiveTabs);
+
+// Create the event handler for onRemoved
+browser.tabs.onRemoved.addListener(recountAllActiveTabs);
 
 // Create the event handler for onUpdated
 browser.tabs.onUpdated.addListener(handleTabUpdation)
 
-
-
+commons.onFirstLoad();

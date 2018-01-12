@@ -35,100 +35,147 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// let browser: any;
-var text = document.getElementById("internal-text");
-function runSomething() {
+var commons = require("./commons");
+/**Appends to the list if the object is not already present in the list */
+function appendToTempusObjectArray(object) {
     return __awaiter(this, void 0, void 0, function () {
-        var tabs, i, tab, sentence, data_1, data;
+        var tempusObject, found, i, temp;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, commons.fetchTempusObject()];
+                case 1:
+                    tempusObject = _a.sent();
+                    found = false;
+                    for (i = 0; i < tempusObject.tempusArray.length; i++) {
+                        temp = tempusObject.tempusArray[i];
+                        if (temp.domain === object.domain) {
+                            found = true;
+                            // Interchange the values
+                            if (temp.active) {
+                                // Don't change anything, since this is already being considered
+                            }
+                            else if (object.active) {
+                                temp.active = object.active;
+                                temp.activatedAt = object.activatedAt;
+                                if (object.lapsed > 0) {
+                                    temp.lapsed = object.lapsed | 0;
+                                }
+                                tempusObject.tempusArray[i] = temp;
+                            }
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        tempusObject.tempusArray.push(object);
+                    }
+                    return [4 /*yield*/, commons.storeTempusObject(tempusObject)];
+                case 2:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+/**Sets the active */
+function toggleTabsActiveState(tempusTabs, active) {
+    return __awaiter(this, void 0, void 0, function () {
+        var object, allTabsDomains, activeDomains, i, availableTab;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, commons.fetchTempusObject()];
+                case 1:
+                    object = _a.sent();
+                    allTabsDomains = object.tempusArray.map(function (temp) {
+                        return temp.domain;
+                    });
+                    activeDomains = tempusTabs.map(function (temp) {
+                        return temp.domain;
+                    });
+                    for (i = 0; i < allTabsDomains.length; i++) {
+                        availableTab = allTabsDomains[i];
+                        if (activeDomains.indexOf(availableTab) > -1) {
+                            if (active) {
+                                object.tempusArray[i].active = true;
+                                object.tempusArray[i].activatedAt = new Date().getTime();
+                            }
+                            else {
+                                object.tempusArray[i].active = false;
+                                object.tempusArray[i].activatedAt = 0;
+                            }
+                        }
+                        else {
+                            object.tempusArray[i].active = false;
+                        }
+                    }
+                    return [4 /*yield*/, commons.storeTempusObject(object)];
+                case 2:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+/**Handles a tab updation event of the browser */
+function handleTabUpdation(tabId, changeInfo, tab) {
+    return __awaiter(this, void 0, void 0, function () {
+        var newTab;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, commons.closePreviouslyUnclosedTabs()];
+                case 1:
+                    _a.sent();
+                    return [4 /*yield*/, commons.updateOpenTabs()];
+                case 2:
+                    _a.sent();
+                    if (changeInfo.status === "complete") {
+                        newTab = {
+                            domain: commons.returnDomainFromURL(tab.url),
+                            active: tab.active,
+                            lapsed: 0
+                        };
+                        if (newTab.active) {
+                            newTab.activatedAt = new Date().getTime();
+                        }
+                        appendToTempusObjectArray(newTab);
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+/**Function that fetches all the available tabs and processes them */
+function recountAllActiveTabs() {
+    return __awaiter(this, void 0, void 0, function () {
+        var temp, allTabs;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, browser.tabs.query({
-                        status: 'complete'
+                        active: true
                     })];
                 case 1:
-                    tabs = _a.sent();
-                    console.log(tabs);
-                    i = 0;
-                    _a.label = 2;
-                case 2:
-                    if (!(i < tabs.length)) return [3 /*break*/, 6];
-                    tab = tabs[i];
-                    sentence = tab.url + ": " + tab.active;
-                    console.log(sentence);
-                    return [4 /*yield*/, browser.storage.local.get()];
-                case 3:
-                    data_1 = _a.sent();
-                    // console.log(data);
-                    if (data_1["data"] == undefined) {
-                        console.log("Found undefined");
-                        data_1 = {};
-                        data_1["data"] = sentence;
-                    }
-                    data_1["data"] += sentence;
-                    // console.log(data);
-                    return [4 /*yield*/, browser.storage.local.set(data_1)];
-                case 4:
-                    // console.log(data);
-                    _a.sent();
-                    _a.label = 5;
-                case 5:
-                    i++;
-                    return [3 /*break*/, 2];
-                case 6: return [4 /*yield*/, browser.storage.local.get()];
-                case 7:
-                    data = _a.sent();
-                    console.log(data);
-                    text.innerHTML = data["data"];
-                    return [4 /*yield*/, browser.storage.local.clear()];
-                case 8:
-                    _a.sent();
-                    console.log("Cleared data");
+                    temp = _a.sent();
+                    allTabs = temp.map(function (tab) {
+                        var localTab = {
+                            domain: commons.returnDomainFromURL(tab.url),
+                            active: tab.active,
+                            lapsed: 0,
+                            activatedAt: 0
+                        };
+                        if (localTab.active) {
+                            localTab.activatedAt = new Date().getTime();
+                        }
+                        return localTab;
+                    });
+                    toggleTabsActiveState(allTabs, true);
                     return [2 /*return*/];
             }
         });
     });
-}
-// runSomething();
-/**Handles a tab activation event of the browser */
-// function handleTabActivation(object{ tabId: number, windowId: number }) {
-//     text.innerHTML += "Tab has been activated<br>";
-//     // console.log("Tab activated");
-//     // console.log("Tab ID is " + tabInfo.tabId);
-//     // console.log("Window ID is " + tabInfo.windowId);
-// }
-/**Handles a tab updation event of the browser */
-function handleTabUpdation(tabId, changeInfo, tab) {
-    var sentence = "Tab has been updated Status: " + tab.status + ", URL: " + changeInfo.url + "<br>";
-    text.innerHTML += sentence;
-    if (changeInfo.status === "complete") {
-        // Get all the tabs here
-        var sentence_1 = "New tab -> " + tab.url;
-        text.innerHTML += sentence_1;
-    }
-    // console.log("Tab updated");
-    // console.log(tabInfo.tabId, tabInfo.changeInfo, tabInfo.tab);
 }
 // Create the event handler for onActivated
-browser.tabs.onActivated.addListener(function (obj) {
-    return __awaiter(this, void 0, void 0, function () {
-        var sentence, temp;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    sentence = obj.tabId + " is the new activation";
-                    console.log(sentence);
-                    return [4 /*yield*/, browser.tabs.query({
-                            windowId: obj.windowId,
-                            index: obj.tabId,
-                        })];
-                case 1:
-                    temp = _a.sent();
-                    console.log(temp);
-                    text.innerHTML += sentence;
-                    return [2 /*return*/];
-            }
-        });
-    });
-});
+browser.tabs.onActivated.addListener(recountAllActiveTabs);
+// Create the event handler for onRemoved
+browser.tabs.onRemoved.addListener(recountAllActiveTabs);
 // Create the event handler for onUpdated
 browser.tabs.onUpdated.addListener(handleTabUpdation);
+commons.onFirstLoad();
