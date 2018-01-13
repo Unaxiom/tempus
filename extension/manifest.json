@@ -35,10 +35,5 @@
             "128": "images/icon128.png",
             "256": "images/icon256.png"
         }
-    },
-    "applications": {
-        "gecko": {
-            "strict_min_version": "55.0a2"
-        }
     }
 }

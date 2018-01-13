@@ -8,35 +8,96 @@ export const refreshDelayInMins = (1 / 60);
 const refreshDelayInMilliSeconds = refreshDelayInMins * 60 * 1000;
 export const refreshAlarm = "Alarm";
 
+const firefoxBrowser = 'firefox';
+const chromeBrowser = 'chrome';
+
+let browserName: string;
+if (navigator.userAgent.indexOf("Chrome") > -1) {
+    browserName = chromeBrowser;
+} else {
+    browserName = firefoxBrowser;
+}
+
+// let browser = chrome;
+
+/**Retrieves the storage value */
+async function getStorage(): Promise<Object> {
+    if (browserName == firefoxBrowser) {
+        return await browser.storage.local.get();
+    } else {
+        //     return new Promise(function (resolve, reject) {
+        //         if ()
+        // })
+    }
+    return {};
+}
+
+/**Sets the storage */
+async function setStorage(storageObject: any): Promise<void> {
+    if (browserName == firefoxBrowser) {
+        await browser.storage.local.set(storageObject);
+    }
+}
+
+/**Clears the storage */
+async function clearStorage(): Promise<void> {
+    if (browserName == firefoxBrowser) {
+        await browser.storage.local.clear();
+    }
+}
+
+/**Adds an alarm to the appropriate browser */
+function createBrowserAlarm(alarmName: string, obj: Object, listener: Function) {
+    if (browserName == firefoxBrowser) {
+        browser.alarms.create(alarmName, obj);
+        browser.alarms.onAlarm.addListener(<any>listener);
+    }
+}
+
+/**Clears the browser alarm */
+async function clearBrowserAlarm(alarmName: string) {
+    if (browserName == firefoxBrowser) {
+        await browser.alarms.clear(alarmName);
+    }
+}
+
+/**Returns all the browser tabs on the basis of the query object */
+async function queryBrowserTabs(obj: Object): Promise<Object[]> {
+    if (browserName == firefoxBrowser) {
+        return await browser.tabs.query(obj);
+    }
+    return [];
+}
+
 /**Returns the tempus object */
 export async function fetchTempusObject(): Promise<tabStructs.tempusObject> {
     // Fetch the current data object
-    let storageObject = await browser.storage.local.get();
+    let storageObject: any = await getStorage();
     if (!storageObject[tempusObjectID]) {
         storageObject[tempusObjectID] = {
             id: tempusObjectID,
             tempusArray: []
         };
         // Write the object to the storage
-        await browser.storage.local.set(storageObject);
+        await setStorage(storageObject);
     }
-    storageObject = await browser.storage.local.get();
+    storageObject = await getStorage();
     return <tabStructs.tempusObject>(<any>storageObject[tempusObjectID]);
 }
 
 /**Returns the tempus refresher object */
 export async function fetchTempusRefresher(): Promise<tabStructs.tempusRefresher> {
     // Fetch the current data object
-    let storageObject = await browser.storage.local.get();
+    let storageObject: any = await getStorage();
     if (!storageObject[tempusRefresherID]) {
         storageObject[tempusRefresherID] = {
             id: tempusRefresherID,
             refreshed_at: 0
         };
         // Write the object to the storage
-        await browser.storage.local.set(storageObject);
+        await setStorage(storageObject);
     }
-    storageObject = await browser.storage.local.get();
+    storageObject = await getStorage();
     return <tabStructs.tempusRefresher>(<any>storageObject[tempusRefresherID]);
 }
 
@@ -90,20 +151,20 @@ export function returnDomainFromURL(url: string | undefined): string {
 export async function storeTempusObject(obj: tabStructs.tempusObject) {
     let localObj = <any>{}
     localObj[tempusObjectID] = obj;
-    await browser.storage.local.set(<any>localObj)
+    await setStorage(localObj);
 }
 
 /**Stores the tempus refresher in the storage */
 export async function storeTempusRefresher(obj: tabStructs.tempusRefresher) {
     let localObj = <any>{}
     localObj[tempusRefresherID] = obj;
-    await browser.storage.local.set(<any>localObj)
+    await setStorage(localObj);
 }
 
 /**Updates all the open tabs */
 export async function updateOpenTabs() {
     // Fetch all the open tabs
-    let tabs = await browser.tabs.query({});
+    let tabs = await queryBrowserTabs({});
     let tempusObject = await fetchTempusObject();
     let tempusRefresher = await fetchTempusRefresher();
 
@@ -114,7 +175,7 @@ export async function updateOpenTabs() {
         tempusArrayDomains.push(obj.domain);
     }
     // If any of the tabsDomains do not have an entry in tempusArrayDomains, then add it to the list
-    tabs.forEach(tab => {
+    tabs.forEach(function (tab: any) {
         if (tab.url) {
             let domain = returnDomainFromURL(tab.url)
             let index = tempusArrayDomains.indexOf(domain);
@@ -140,20 +201,21 @@ export async function updateOpenTabs() {
 
 // Alarms
 
+
+
 /**Creates the alarm */
 function createAlarm() {
-    browser.alarms.create(refreshAlarm, { delayInMinutes: refreshDelayInMins });
-    browser.alarms.onAlarm.addListener(refreshTimestamp);
+    createBrowserAlarm(refreshAlarm, { delayInMinutes: refreshDelayInMins }, refreshTimestamp);
 }
 
 /**Resets the alarms */
 async function resetAlarm() {
-    await browser.alarms.clear(refreshAlarm);
+    await clearBrowserAlarm(refreshAlarm);
     createAlarm();
 }
 
 /**Event handler that handles the alarm fire */
-async function refreshTimestamp(alarm: browser.alarms.Alarm) {
+async function refreshTimestamp() {
     // Update the refreshed object
     let tempusRefresher = await fetchTempusRefresher();
     tempusRefresher.refreshed_at = new Date().getTime();
@@ -176,14 +238,12 @@ async function refreshTimestamp(alarm: browser.alarms.Alarm) {
 
 /**Handle the first run */
 export async function onFirstLoad() {
-    // await __deleteStorage();
     await closePreviouslyUnclosedTabs();
     await updateOpenTabs();
-    // createAlarm();
     await resetAlarm();
 }
 
 /**Deletes the storage */
 export async function __deleteStorage() {
-    await browser.storage.local.clear();
+    await clearStorage();
 }

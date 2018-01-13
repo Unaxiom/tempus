@@ -41,13 +41,106 @@ exports.tempusRefresherID = "tempusRefresher";
 exports.refreshDelayInMins = (1 / 60);
 var refreshDelayInMilliSeconds = exports.refreshDelayInMins * 60 * 1000;
 exports.refreshAlarm = "Alarm";
+var firefoxBrowser = 'firefox';
+var chromeBrowser = 'chrome';
+var browserName;
+if (navigator.userAgent.indexOf("Chrome") > -1) {
+    browserName = chromeBrowser;
+}
+else {
+    browserName = firefoxBrowser;
+}
+// let browser = chrome;
+/**Retrieves the storage value */
+function getStorage() {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!(browserName == firefoxBrowser)) return [3 /*break*/, 2];
+                    return [4 /*yield*/, browser.storage.local.get()];
+                case 1: return [2 /*return*/, _a.sent()];
+                case 2: return [2 /*return*/, {}];
+            }
+        });
+    });
+}
+/**Sets the storage */
+function setStorage(storageObject) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!(browserName == firefoxBrowser)) return [3 /*break*/, 2];
+                    return [4 /*yield*/, browser.storage.local.set(storageObject)];
+                case 1:
+                    _a.sent();
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
+            }
+        });
+    });
+}
+/**Clears the storage */
+function clearStorage() {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!(browserName == firefoxBrowser)) return [3 /*break*/, 2];
+                    return [4 /*yield*/, browser.storage.local.clear()];
+                case 1:
+                    _a.sent();
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
+            }
+        });
+    });
+}
+/**Adds an alarm to the appropriate browser */
+function createBrowserAlarm(alarmName, obj, listener) {
+    if (browserName == firefoxBrowser) {
+        browser.alarms.create(alarmName, obj);
+        browser.alarms.onAlarm.addListener(listener);
+    }
+}
+/**Clears the browser alarm */
+function clearBrowserAlarm(alarmName) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!(browserName == firefoxBrowser)) return [3 /*break*/, 2];
+                    return [4 /*yield*/, browser.alarms.clear(alarmName)];
+                case 1:
+                    _a.sent();
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
+            }
+        });
+    });
+}
+/**Returns all the browser tabs on the basis of the query object */
+function queryBrowserTabs(obj) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!(browserName == firefoxBrowser)) return [3 /*break*/, 2];
+                    return [4 /*yield*/, browser.tabs.query(obj)];
+                case 1: return [2 /*return*/, _a.sent()];
+                case 2: return [2 /*return*/, []];
+            }
+        });
+    });
+}
 /**Returns the tempus object */
 function fetchTempusObject() {
     return __awaiter(this, void 0, void 0, function () {
         var storageObject;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, browser.storage.local.get()];
+                case 0: return [4 /*yield*/, getStorage()];
                 case 1:
                     storageObject = _a.sent();
                     if (!!storageObject[exports.tempusObjectID]) return [3 /*break*/, 3];
@@ -56,12 +149,12 @@ function fetchTempusObject() {
                         tempusArray: []
                     };
                     // Write the object to the storage
-                    return [4 /*yield*/, browser.storage.local.set(storageObject)];
+                    return [4 /*yield*/, setStorage(storageObject)];
                 case 2:
                     // Write the object to the storage
                     _a.sent();
                     _a.label = 3;
-                case 3: return [4 /*yield*/, browser.storage.local.get()];
+                case 3: return [4 /*yield*/, getStorage()];
                 case 4:
                     storageObject = _a.sent();
                     return [2 /*return*/, storageObject[exports.tempusObjectID]];
@@ -76,7 +169,7 @@ function fetchTempusRefresher() {
         var storageObject;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, browser.storage.local.get()];
+                case 0: return [4 /*yield*/, getStorage()];
                 case 1:
                     storageObject = _a.sent();
                     if (!!storageObject[exports.tempusRefresherID]) return [3 /*break*/, 3];
@@ -85,12 +178,12 @@ function fetchTempusRefresher() {
                         refreshed_at: 0
                     };
                     // Write the object to the storage
-                    return [4 /*yield*/, browser.storage.local.set(storageObject)];
+                    return [4 /*yield*/, setStorage(storageObject)];
                 case 2:
                     // Write the object to the storage
                     _a.sent();
                     _a.label = 3;
-                case 3: return [4 /*yield*/, browser.storage.local.get()];
+                case 3: return [4 /*yield*/, getStorage()];
                 case 4:
                     storageObject = _a.sent();
                     return [2 /*return*/, storageObject[exports.tempusRefresherID]];
@@ -170,7 +263,7 @@ function storeTempusObject(obj) {
                 case 0:
                     localObj = {};
                     localObj[exports.tempusObjectID] = obj;
-                    return [4 /*yield*/, browser.storage.local.set(localObj)];
+                    return [4 /*yield*/, setStorage(localObj)];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
@@ -188,7 +281,7 @@ function storeTempusRefresher(obj) {
                 case 0:
                     localObj = {};
                     localObj[exports.tempusRefresherID] = obj;
-                    return [4 /*yield*/, browser.storage.local.set(localObj)];
+                    return [4 /*yield*/, setStorage(localObj)];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
@@ -203,7 +296,7 @@ function updateOpenTabs() {
         var tabs, tempusObject, tempusRefresher, tempusArrayDomains, j, obj;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, browser.tabs.query({})];
+                case 0: return [4 /*yield*/, queryBrowserTabs({})];
                 case 1:
                     tabs = _a.sent();
                     return [4 /*yield*/, fetchTempusObject()];
@@ -252,15 +345,14 @@ exports.updateOpenTabs = updateOpenTabs;
 // Alarms
 /**Creates the alarm */
 function createAlarm() {
-    browser.alarms.create(exports.refreshAlarm, { delayInMinutes: exports.refreshDelayInMins });
-    browser.alarms.onAlarm.addListener(refreshTimestamp);
+    createBrowserAlarm(exports.refreshAlarm, { delayInMinutes: exports.refreshDelayInMins }, refreshTimestamp);
 }
 /**Resets the alarms */
 function resetAlarm() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, browser.alarms.clear(exports.refreshAlarm)];
+                case 0: return [4 /*yield*/, clearBrowserAlarm(exports.refreshAlarm)];
                 case 1:
                     _a.sent();
                     createAlarm();
@@ -270,7 +362,7 @@ function resetAlarm() {
     });
 }
 /**Event handler that handles the alarm fire */
-function refreshTimestamp(alarm) {
+function refreshTimestamp() {
     return __awaiter(this, void 0, void 0, function () {
         var tempusRefresher, tempusObject;
         return __generator(this, function (_a) {
@@ -307,19 +399,14 @@ function onFirstLoad() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: 
-                // await __deleteStorage();
-                return [4 /*yield*/, closePreviouslyUnclosedTabs()];
+                case 0: return [4 /*yield*/, closePreviouslyUnclosedTabs()];
                 case 1:
-                    // await __deleteStorage();
                     _a.sent();
                     return [4 /*yield*/, updateOpenTabs()];
                 case 2:
                     _a.sent();
-                    // createAlarm();
                     return [4 /*yield*/, resetAlarm()];
                 case 3:
-                    // createAlarm();
                     _a.sent();
                     return [2 /*return*/];
             }
@@ -332,7 +419,7 @@ function __deleteStorage() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, browser.storage.local.clear()];
+                case 0: return [4 /*yield*/, clearStorage()];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
