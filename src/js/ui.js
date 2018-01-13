@@ -37,13 +37,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var commons = require("./commons");
 var tableBody = document.getElementById("tbody");
-var clearButton = document.getElementById("reset-button");
+var resetButton = document.getElementById("reset-button");
+var sortByDomainButton = document.getElementById("sort-by-domain");
+var sortByDurationButton = document.getElementById("sort-by-duration");
+var sortByStatusButton = document.getElementById("sort-by-active");
 var millisecond = 1;
 var second = 1000 * millisecond;
 var minute = 60 * second;
 var hour = 60 * minute;
-if (clearButton) {
-    clearButton.addEventListener('click', function (evt) {
+if (resetButton) {
+    resetButton.addEventListener('click', function (evt) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -68,39 +71,142 @@ if (clearButton) {
         });
     });
 }
+/**Toggles the sort order */
+function toggleSortOrder() {
+    var sortOrder = tableBody.getAttribute("data-sort-order");
+    if (sortOrder == "asc") {
+        sortOrder = "desc";
+    }
+    else {
+        sortOrder = "asc";
+    }
+    tableBody.setAttribute("data-sort-order", sortOrder);
+}
+sortByDomainButton.addEventListener('click', function (evt) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            evt.preventDefault();
+            tableBody.setAttribute("data-sort-by", "domain");
+            toggleSortOrder();
+            main();
+            return [2 /*return*/];
+        });
+    });
+});
+sortByDurationButton.addEventListener('click', function (evt) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            evt.preventDefault();
+            tableBody.setAttribute("data-sort-by", "duration");
+            toggleSortOrder();
+            main();
+            return [2 /*return*/];
+        });
+    });
+});
+sortByStatusButton.addEventListener('click', function (evt) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            evt.preventDefault();
+            tableBody.setAttribute("data-sort-by", "active");
+            toggleSortOrder();
+            main();
+            return [2 /*return*/];
+        });
+    });
+});
 /**Main runner */
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var tempusObject, tableBodyString;
+        var tempusObject, sortOrder, sortBy;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, commons.fetchTempusObject()];
                 case 1:
                     tempusObject = _a.sent();
-                    tableBodyString = '';
+                    sortOrder = tableBody.getAttribute("data-sort-order");
+                    sortBy = tableBody.getAttribute("data-sort-by");
                     // Sort by Active
                     tempusObject.tempusArray.sort(function (a, b) {
-                        if (a.active > b.active) {
-                            return -1;
+                        if (sortBy == "duration") {
+                            return sortByDuration(a, b, sortOrder);
                         }
-                        return 1;
+                        else if (sortBy == "domain") {
+                            return sortByDomain(a, b, sortOrder);
+                        }
+                        return sortByActive(a, b, sortOrder);
                     });
-                    tempusObject.tempusArray.forEach(function (tempus) {
-                        tableBodyString += "\n        <tr class='" + returnRowClass(tempus.active) + "'>\n            <td>" + tempus.domain + "</td>\n            <td>" + returnTimeLapsed(tempus.lapsed) + "</td>\n        </tr>\n        ";
-                    });
-                    // <td>${Math.round(tempus.lapsed / 1000)}s</td>
-                    if (tableBody) {
-                        tableBody.innerHTML = tableBodyString;
-                    }
+                    renderTable(tempusObject);
                     return [2 /*return*/];
             }
         });
     });
 }
-main();
-setInterval(function () {
-    main();
-}, 2000);
+/**Sorts the tempusArray by Domain */
+function sortByDomain(a, b, order) {
+    if (!order) {
+        order = 'asc';
+    }
+    if (a.domain > b.domain) {
+        if (order == "asc") {
+            return -1;
+        }
+        else {
+            return 1;
+        }
+    }
+    if (order == "asc") {
+        return 1;
+    }
+    return -1;
+}
+/**Sorts the tempusArray by Duration */
+function sortByDuration(a, b, order) {
+    if (!order) {
+        order = 'asc';
+    }
+    if (a.lapsed > b.lapsed) {
+        if (order == "asc") {
+            return -1;
+        }
+        else {
+            return 1;
+        }
+    }
+    if (order == "asc") {
+        return 1;
+    }
+    return -1;
+}
+/**Sorts the tempusArray by ACTIVE */
+function sortByActive(a, b, order) {
+    if (!order) {
+        order = 'asc';
+    }
+    if (a.active > b.active) {
+        if (order == "asc") {
+            return -1;
+        }
+        else {
+            return 1;
+        }
+    }
+    if (order == "asc") {
+        return 1;
+    }
+    return -1;
+}
+/**Renders the table displaying the domain and duration */
+function renderTable(tempusObject) {
+    var tableBodyString = '';
+    tempusObject.tempusArray.forEach(function (tempus) {
+        tableBodyString += "\n        <tr class='" + returnRowClass(tempus.active) + "'>\n            <td>" + tempus.domain + "</td>\n            <td>" + returnTimeLapsed(tempus.lapsed) + "</td>\n            <td>" + returnActiveStatus(tempus.active) + "</td>\n        </tr>\n        ";
+    });
+    // <td>${Math.round(tempus.lapsed / 1000)}s</td>
+    if (tableBody) {
+        tableBody.innerHTML = tableBodyString;
+    }
+}
 /**Returns the active class color depending on the status */
 function returnRowClass(active) {
     if (active) {
@@ -125,4 +231,18 @@ function returnTimeLapsed(lapsed) {
     m = Math.round(m / minute);
     return pad(h).toString() + ":" + pad(m).toString() + ":" + pad(s).toString() + "h";
 }
-function pad(n) { return n < 10 ? '0' + n : n; }
+/**Returns the ACTIVE state */
+function returnActiveStatus(active) {
+    if (active) {
+        return "Active";
+    }
+    return "Inactive";
+}
+/**Returns a padded number */
+function pad(n) {
+    return n < 10 ? '0' + n : n;
+}
+main();
+setInterval(function () {
+    main();
+}, 2000);

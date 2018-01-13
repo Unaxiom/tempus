@@ -1,14 +1,20 @@
 import commons = require("./commons");
+import { tempusObject } from "./tab-structs";
+import { tempusStruct } from "./base-structs";
 
-let tableBody = document.getElementById("tbody");
-let clearButton = document.getElementById("reset-button");
-let millisecond = 1;
-let second = 1000 * millisecond;
-let minute = 60 * second;
-let hour = 60 * minute;
+let tableBody = <HTMLTableElement>document.getElementById("tbody");
+let resetButton = <HTMLAnchorElement>document.getElementById("reset-button");
+let sortByDomainButton = <HTMLTableHeaderCellElement>document.getElementById("sort-by-domain");
+let sortByDurationButton = <HTMLTableHeaderCellElement>document.getElementById("sort-by-duration");
+let sortByStatusButton = <HTMLTableHeaderCellElement>document.getElementById("sort-by-active");
 
-if (clearButton) {
-    clearButton.addEventListener('click', async function (evt) {
+const millisecond = 1;
+const second = 1000 * millisecond;
+const minute = 60 * second;
+const hour = 60 * minute;
+
+if (resetButton) {
+    resetButton.addEventListener('click', async function (evt) {
         evt.preventDefault();
         await commons.__deleteStorage();
         await commons.closePreviouslyUnclosedTabs();
@@ -20,24 +26,118 @@ if (clearButton) {
     });
 }
 
+/**Toggles the sort order */
+function toggleSortOrder() {
+    let sortOrder = tableBody.getAttribute("data-sort-order");
+    if (sortOrder == "asc") {
+        sortOrder = "desc";
+    } else {
+        sortOrder = "asc";
+    }
+    tableBody.setAttribute("data-sort-order", sortOrder);
+}
+
+sortByDomainButton.addEventListener('click', async function (evt) {
+    evt.preventDefault();
+    tableBody.setAttribute("data-sort-by", "domain");
+    toggleSortOrder();
+    main();
+});
+
+sortByDurationButton.addEventListener('click', async function (evt) {
+    evt.preventDefault();
+    tableBody.setAttribute("data-sort-by", "duration");
+    toggleSortOrder();
+    main();
+});
+
+sortByStatusButton.addEventListener('click', async function (evt) {
+    evt.preventDefault();
+    tableBody.setAttribute("data-sort-by", "active");
+    toggleSortOrder();
+    main();
+});
+
 /**Main runner */
 async function main() {
     let tempusObject = await commons.fetchTempusObject();
-    let tableBodyString = '';
+    let sortOrder = tableBody.getAttribute("data-sort-order");
+    let sortBy = tableBody.getAttribute("data-sort-by");
     // Sort by Active
-
     tempusObject.tempusArray.sort(function (a, b): number {
-        if (a.active > b.active) {
-            return -1
+        if (sortBy == "duration") {
+            return sortByDuration(a, b, sortOrder);
+        } else if (sortBy == "domain") {
+            return sortByDomain(a, b, sortOrder);
         }
-        return 1
-    })
+        return sortByActive(a, b, sortOrder);
+    });
+    renderTable(tempusObject);
+}
 
+/**Sorts the tempusArray by Domain */
+function sortByDomain(a: tempusStruct, b: tempusStruct, order: string | null): number {
+    if (!order) {
+        order = 'asc';
+    }
+    if (a.domain > b.domain) {
+        if (order == "asc") {
+            return -1
+        } else {
+            return 1
+        }
+    }
+    if (order == "asc") {
+        return 1
+    }
+    return -1
+}
+
+/**Sorts the tempusArray by Duration */
+function sortByDuration(a: tempusStruct, b: tempusStruct, order: string | null): number {
+    if (!order) {
+        order = 'asc';
+    }
+    if (a.lapsed > b.lapsed) {
+        if (order == "asc") {
+            return -1
+        } else {
+            return 1
+        }
+    }
+    if (order == "asc") {
+        return 1
+    }
+    return -1
+}
+
+/**Sorts the tempusArray by ACTIVE */
+function sortByActive(a: tempusStruct, b: tempusStruct, order: string | null): number {
+    if (!order) {
+        order = 'asc';
+    }
+    if (a.active > b.active) {
+        if (order == "asc") {
+            return -1
+        } else {
+            return 1
+        }
+    }
+    if (order == "asc") {
+        return 1
+    }
+    return -1
+}
+
+/**Renders the table displaying the domain and duration */
+function renderTable(tempusObject: tempusObject) {
+    let tableBodyString = '';
     tempusObject.tempusArray.forEach(tempus => {
         tableBodyString += `
         <tr class='${returnRowClass(tempus.active)}'>
             <td>${tempus.domain}</td>
             <td>${returnTimeLapsed(tempus.lapsed)}</td>
+            <td>${returnActiveStatus(tempus.active)}</td>
         </tr>
         `;
     });
@@ -46,12 +146,6 @@ async function main() {
         tableBody.innerHTML = tableBodyString;
     }
 }
-
-main();
-
-setInterval(function () {
-    main()
-}, 2000);
 
 /**Returns the active class color depending on the status */
 function returnRowClass(active: boolean): string {
@@ -66,18 +160,34 @@ function returnRowClass(active: boolean): string {
  * If greater than 1 min and less than 1 hour, format will be XX:YYm
  * Otherwise, will be XX:YY:ZZh */
 function returnTimeLapsed(lapsed: number): string {
-
     if (lapsed < minute) {
         return Math.round(lapsed / second).toString() + "s";
     } else if (lapsed < hour) {
         return pad(Math.round(lapsed / minute)).toString() + ":" + pad(Math.round((lapsed % minute) / second)).toString() + "m";
     }
+
     let h = Math.round(lapsed / hour);
     let m = Math.round(lapsed % h);
     let s = Math.round((m % minute) / second);
     m = Math.round(m / minute);
     return pad(h).toString() + ":" + pad(m).toString() + ":" + pad(s).toString() + "h";
-
 }
 
-function pad(n: number) { return n < 10 ? '0' + n : n }
+/**Returns the ACTIVE state */
+function returnActiveStatus(active: boolean): string {
+    if (active) {
+        return "Active"
+    }
+    return "Inactive"
+}
+
+/**Returns a padded number */
+function pad(n: number) {
+    return n < 10 ? '0' + n : n
+}
+
+main();
+
+setInterval(function () {
+    main()
+}, 2000);
