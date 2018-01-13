@@ -4,7 +4,7 @@ import baseStructs = require('./base-structs');
 /**Stores the list of URLs */
 export const tempusObjectID = "tempusArray";
 export const tempusRefresherID = "tempusRefresher";
-export const refreshDelayInMins = 1 / 60;
+export const refreshDelayInMins = (1 / 60) * 60 * 1000;
 export const refreshAlarm = "Alarm";
 
 /**Returns the tempus object */
@@ -56,9 +56,9 @@ export async function closePreviouslyUnclosedTabs() {
     tempusObject.tempusArray.forEach(tempusStruct => {
         if (tempusStruct.active) {
             tempusStruct.active = false
-            if (timeDelay > refreshDelayInMins * 60 * 1000) {
+            if (timeDelay > refreshDelayInMins) {
                 // If time delay is greater, then the max increment can be the refresh delay
-                tempusStruct.lapsed += refreshDelayInMins * 60 * 1000
+                tempusStruct.lapsed += refreshDelayInMins
             } else {
                 // If time delay is lower, then set it to time delay
                 tempusStruct.lapsed += timeDelay

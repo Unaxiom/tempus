@@ -38,7 +38,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**Stores the list of URLs */
 exports.tempusObjectID = "tempusArray";
 exports.tempusRefresherID = "tempusRefresher";
-exports.refreshDelayInMins = 1 / 60;
+exports.refreshDelayInMins = (1 / 60) * 60 * 1000;
 exports.refreshAlarm = "Alarm";
 /**Returns the tempus object */
 function fetchTempusObject() {
@@ -122,9 +122,9 @@ function closePreviouslyUnclosedTabs() {
                     tempusObject.tempusArray.forEach(function (tempusStruct) {
                         if (tempusStruct.active) {
                             tempusStruct.active = false;
-                            if (timeDelay > exports.refreshDelayInMins * 60 * 1000) {
+                            if (timeDelay > exports.refreshDelayInMins) {
                                 // If time delay is greater, then the max increment can be the refresh delay
-                                tempusStruct.lapsed += exports.refreshDelayInMins * 60 * 1000;
+                                tempusStruct.lapsed += exports.refreshDelayInMins;
                             }
                             else {
                                 // If time delay is lower, then set it to time delay
