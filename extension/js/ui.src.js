@@ -39,7 +39,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**Stores the list of URLs */
 exports.tempusObjectID = "tempusArray";
 exports.tempusRefresherID = "tempusRefresher";
-exports.refreshDelayInMins = (1 / 60) * 60 * 1000;
+exports.refreshDelayInMins = (1 / 60);
+var refreshDelayInMilliSeconds = exports.refreshDelayInMins * 60 * 1000;
 exports.refreshAlarm = "Alarm";
 /**Returns the tempus object */
 function fetchTempusObject() {
@@ -123,9 +124,9 @@ function closePreviouslyUnclosedTabs() {
                     tempusObject.tempusArray.forEach(function (tempusStruct) {
                         if (tempusStruct.active) {
                             tempusStruct.active = false;
-                            if (timeDelay > exports.refreshDelayInMins) {
+                            if (timeDelay > refreshDelayInMilliSeconds) {
                                 // If time delay is greater, then the max increment can be the refresh delay
-                                tempusStruct.lapsed += exports.refreshDelayInMins;
+                                tempusStruct.lapsed += refreshDelayInMilliSeconds;
                             }
                             else {
                                 // If time delay is lower, then set it to time delay
@@ -426,13 +427,16 @@ function toggleSortOrder() {
         sortOrder = "asc";
     }
     tableBody.setAttribute("data-sort-order", sortOrder);
+    return sortOrder;
 }
 sortByDomainButton.addEventListener('click', function (evt) {
     return __awaiter(this, void 0, void 0, function () {
+        var sortOrder;
         return __generator(this, function (_a) {
             evt.preventDefault();
             tableBody.setAttribute("data-sort-by", "domain");
-            toggleSortOrder();
+            sortOrder = toggleSortOrder();
+            attachArrow(this, sortOrder, "Domain");
             main();
             return [2 /*return*/];
         });
@@ -440,10 +444,12 @@ sortByDomainButton.addEventListener('click', function (evt) {
 });
 sortByDurationButton.addEventListener('click', function (evt) {
     return __awaiter(this, void 0, void 0, function () {
+        var sortOrder;
         return __generator(this, function (_a) {
             evt.preventDefault();
             tableBody.setAttribute("data-sort-by", "duration");
-            toggleSortOrder();
+            sortOrder = toggleSortOrder();
+            attachArrow(this, sortOrder, "Duration");
             main();
             return [2 /*return*/];
         });
@@ -451,15 +457,34 @@ sortByDurationButton.addEventListener('click', function (evt) {
 });
 sortByStatusButton.addEventListener('click', function (evt) {
     return __awaiter(this, void 0, void 0, function () {
+        var sortOrder;
         return __generator(this, function (_a) {
             evt.preventDefault();
             tableBody.setAttribute("data-sort-by", "active");
-            toggleSortOrder();
+            sortOrder = toggleSortOrder();
+            /**Copy from here */
+            attachArrow(this, sortOrder, "Status");
+            /**Until here */
             main();
             return [2 /*return*/];
         });
     });
 });
+function attachArrow(th, sortOrder, type) {
+    var i = th.parentElement.getElementsByTagName("i")[0];
+    if (sortOrder == "asc") {
+        i.className = "fa fa-arrow-up";
+    }
+    else {
+        i.className = "fa fa-arrow-down";
+    }
+    // Remove it from the current location
+    var parentEl = i.parentElement;
+    parentEl.removeChild(i);
+    // Append it
+    th.innerHTML = "";
+    th.insertAdjacentHTML("afterbegin", i.outerHTML + type);
+}
 /**Main runner */
 function main() {
     return __awaiter(this, void 0, void 0, function () {

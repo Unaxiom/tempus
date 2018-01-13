@@ -27,7 +27,7 @@ if (resetButton) {
 }
 
 /**Toggles the sort order */
-function toggleSortOrder() {
+function toggleSortOrder(): string {
     let sortOrder = tableBody.getAttribute("data-sort-order");
     if (sortOrder == "asc") {
         sortOrder = "desc";
@@ -35,28 +35,49 @@ function toggleSortOrder() {
         sortOrder = "asc";
     }
     tableBody.setAttribute("data-sort-order", sortOrder);
+    return sortOrder
 }
 
 sortByDomainButton.addEventListener('click', async function (evt) {
     evt.preventDefault();
     tableBody.setAttribute("data-sort-by", "domain");
-    toggleSortOrder();
+    let sortOrder = toggleSortOrder();
+    attachArrow(this, sortOrder, "Domain");
     main();
 });
 
 sortByDurationButton.addEventListener('click', async function (evt) {
     evt.preventDefault();
     tableBody.setAttribute("data-sort-by", "duration");
-    toggleSortOrder();
+    let sortOrder = toggleSortOrder();
+    attachArrow(this, sortOrder, "Duration");
     main();
 });
 
 sortByStatusButton.addEventListener('click', async function (evt) {
     evt.preventDefault();
     tableBody.setAttribute("data-sort-by", "active");
-    toggleSortOrder();
+    let sortOrder = toggleSortOrder();
+    /**Copy from here */
+    attachArrow(this, sortOrder, "Status");
+    /**Until here */
     main();
 });
+
+function attachArrow(th: HTMLTableHeaderCellElement, sortOrder: string, type: string) {
+    let i = (<HTMLElement>th.parentElement).getElementsByTagName("i")[0];
+    if (sortOrder == "asc") {
+        i.className = "fa fa-arrow-up";
+    } else {
+        i.className = "fa fa-arrow-down";
+    }
+    // Remove it from the current location
+    let parentEl = <HTMLElement>i.parentElement;
+    parentEl.removeChild(i);
+    // Append it
+    th.innerHTML = "";
+    th.insertAdjacentHTML("afterbegin", i.outerHTML + type);
+}
 
 /**Main runner */
 async function main() {
@@ -189,5 +210,5 @@ function pad(n: number) {
 main();
 
 setInterval(function () {
-    main()
+    main();
 }, 2000);
