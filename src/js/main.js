@@ -149,7 +149,7 @@ function recountAllActiveTabs() {
         var temp, allTabs;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, browser.tabs.query({
+                case 0: return [4 /*yield*/, commons.queryBrowserTabs({
                         active: true
                     })];
                 case 1:
@@ -173,9 +173,9 @@ function recountAllActiveTabs() {
     });
 }
 // Create the event handler for onActivated
-browser.tabs.onActivated.addListener(recountAllActiveTabs);
+commons.addBrowserTabsOnActivatedHandler(recountAllActiveTabs);
 // Create the event handler for onRemoved
-browser.tabs.onRemoved.addListener(recountAllActiveTabs);
+commons.addBrowserTabsOnRemovedHandler(recountAllActiveTabs);
 // Create the event handler for onUpdated
-browser.tabs.onUpdated.addListener(handleTabUpdation);
+commons.addBrowserTabsOnUpdatedHandler(handleTabUpdation);
 commons.onFirstLoad();

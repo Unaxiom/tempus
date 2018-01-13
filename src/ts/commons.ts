@@ -24,10 +24,16 @@ if (navigator.userAgent.indexOf("Chrome") > -1) {
 async function getStorage(): Promise<Object> {
     if (browserName == firefoxBrowser) {
         return await browser.storage.local.get();
-    } else {
-        //     return new Promise(function (resolve, reject) {
-        //         if ()
-        // })
+    } else if (browserName == chromeBrowser) {
+        return new Promise(function (resolve, reject) {
+            try {
+                chrome.storage.local.get(function (items) {
+                    resolve(items);
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
     return {};
 }
@@ -36,6 +42,16 @@ async function getStorage(): Promise<Object> {
 async function setStorage(storageObject: any): Promise<void> {
     if (browserName == firefoxBrowser) {
         await browser.storage.local.set(storageObject);
+    } else if (browserName == chromeBrowser) {
+        return new Promise<void>(function (resolve, reject) {
+            try {
+                chrome.storage.local.set(storageObject, function () {
+                    resolve();
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 }
 
@@ -43,6 +59,16 @@ async function setStorage(storageObject: any): Promise<void> {
 async function clearStorage(): Promise<void> {
     if (browserName == firefoxBrowser) {
         await browser.storage.local.clear();
+    } else if (browserName == chromeBrowser) {
+        return new Promise<void>(function (resolve, reject) {
+            try {
+                chrome.storage.local.clear(function () {
+                    resolve();
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 }
 
@@ -51,6 +77,9 @@ function createBrowserAlarm(alarmName: string, obj: Object, listener: Function) 
     if (browserName == firefoxBrowser) {
         browser.alarms.create(alarmName, obj);
         browser.alarms.onAlarm.addListener(<any>listener);
+    } else if (browserName == chromeBrowser) {
+        chrome.alarms.create(alarmName, obj);
+        chrome.alarms.onAlarm.addListener(<any>listener);
     }
 }
 
@@ -58,16 +87,64 @@ function createBrowserAlarm(alarmName: string, obj: Object, listener: Function) 
 async function clearBrowserAlarm(alarmName: string) {
     if (browserName == firefoxBrowser) {
         await browser.alarms.clear(alarmName);
+    } else if (browserName == chromeBrowser) {
+        return new Promise<void>(function (resolve, reject) {
+            try {
+                chrome.alarms.clear(alarmName, function (wasCleared: boolean) {
+                    resolve();
+                });
+            } catch (e) {
+                reject(e);
+            }
+        })
     }
 }
 
 /**Returns all the browser tabs on the basis of the query object */
-async function queryBrowserTabs(obj: Object): Promise<Object[]> {
+export async function queryBrowserTabs(obj: Object): Promise<Object[]> {
     if (browserName == firefoxBrowser) {
         return await browser.tabs.query(obj);
+    } else if (browserName == chromeBrowser) {
+        return new Promise<Object[]>(function (resolve, reject) {
+            try {
+                chrome.tabs.query(<any>obj, function (result) {
+                    resolve(result);
+                })
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
     return [];
 }
+
+/**Attaches the event handler that is fired when a tab is activated */
+export function addBrowserTabsOnActivatedHandler(callback: Function) {
+    if (browserName == firefoxBrowser) {
+        browser.tabs.onActivated.addListener(<any>callback);
+    } else if (browserName == chromeBrowser) {
+        chrome.tabs.onActivated.addListener(<any>callback);
+    }
+}
+
+/**Attaches the event handler that is fired when a tab is removed */
+export function addBrowserTabsOnRemovedHandler(callback: Function) {
+    if (browserName == firefoxBrowser) {
+        browser.tabs.onRemoved.addListener(<any>callback);
+    } else if (browserName == chromeBrowser) {
+        chrome.tabs.onRemoved.addListener(<any>callback);
+    }
+}
+
+/**Attaches the event handler that is fired when a tab is updated */
+export function addBrowserTabsOnUpdatedHandler(callback: Function) {
+    if (browserName == firefoxBrowser) {
+        browser.tabs.onUpdated.addListener(<any>callback);
+    } else if (browserName == chromeBrowser) {
+        chrome.tabs.onUpdated.addListener(<any>callback);
+    }
+}
+
 
 /**Returns the tempus object */
 export async function fetchTempusObject(): Promise<tabStructs.tempusObject> {

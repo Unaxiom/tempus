@@ -60,7 +60,21 @@ function getStorage() {
                     if (!(browserName == firefoxBrowser)) return [3 /*break*/, 2];
                     return [4 /*yield*/, browser.storage.local.get()];
                 case 1: return [2 /*return*/, _a.sent()];
-                case 2: return [2 /*return*/, {}];
+                case 2:
+                    if (browserName == chromeBrowser) {
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                try {
+                                    chrome.storage.local.get(function (items) {
+                                        resolve(items);
+                                    });
+                                }
+                                catch (e) {
+                                    reject(e);
+                                }
+                            })];
+                    }
+                    _a.label = 3;
+                case 3: return [2 /*return*/, {}];
             }
         });
     });
@@ -75,8 +89,22 @@ function setStorage(storageObject) {
                     return [4 /*yield*/, browser.storage.local.set(storageObject)];
                 case 1:
                     _a.sent();
-                    _a.label = 2;
-                case 2: return [2 /*return*/];
+                    return [3 /*break*/, 3];
+                case 2:
+                    if (browserName == chromeBrowser) {
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                try {
+                                    chrome.storage.local.set(storageObject, function () {
+                                        resolve();
+                                    });
+                                }
+                                catch (e) {
+                                    reject(e);
+                                }
+                            })];
+                    }
+                    _a.label = 3;
+                case 3: return [2 /*return*/];
             }
         });
     });
@@ -91,8 +119,22 @@ function clearStorage() {
                     return [4 /*yield*/, browser.storage.local.clear()];
                 case 1:
                     _a.sent();
-                    _a.label = 2;
-                case 2: return [2 /*return*/];
+                    return [3 /*break*/, 3];
+                case 2:
+                    if (browserName == chromeBrowser) {
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                try {
+                                    chrome.storage.local.clear(function () {
+                                        resolve();
+                                    });
+                                }
+                                catch (e) {
+                                    reject(e);
+                                }
+                            })];
+                    }
+                    _a.label = 3;
+                case 3: return [2 /*return*/];
             }
         });
     });
@@ -102,6 +144,10 @@ function createBrowserAlarm(alarmName, obj, listener) {
     if (browserName == firefoxBrowser) {
         browser.alarms.create(alarmName, obj);
         browser.alarms.onAlarm.addListener(listener);
+    }
+    else if (browserName == chromeBrowser) {
+        chrome.alarms.create(alarmName, obj);
+        chrome.alarms.onAlarm.addListener(listener);
     }
 }
 /**Clears the browser alarm */
@@ -114,8 +160,22 @@ function clearBrowserAlarm(alarmName) {
                     return [4 /*yield*/, browser.alarms.clear(alarmName)];
                 case 1:
                     _a.sent();
-                    _a.label = 2;
-                case 2: return [2 /*return*/];
+                    return [3 /*break*/, 3];
+                case 2:
+                    if (browserName == chromeBrowser) {
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                try {
+                                    chrome.alarms.clear(alarmName, function (wasCleared) {
+                                        resolve();
+                                    });
+                                }
+                                catch (e) {
+                                    reject(e);
+                                }
+                            })];
+                    }
+                    _a.label = 3;
+                case 3: return [2 /*return*/];
             }
         });
     });
@@ -129,11 +189,56 @@ function queryBrowserTabs(obj) {
                     if (!(browserName == firefoxBrowser)) return [3 /*break*/, 2];
                     return [4 /*yield*/, browser.tabs.query(obj)];
                 case 1: return [2 /*return*/, _a.sent()];
-                case 2: return [2 /*return*/, []];
+                case 2:
+                    if (browserName == chromeBrowser) {
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                try {
+                                    chrome.tabs.query(obj, function (result) {
+                                        resolve(result);
+                                    });
+                                }
+                                catch (e) {
+                                    reject(e);
+                                }
+                            })];
+                    }
+                    _a.label = 3;
+                case 3: return [2 /*return*/, []];
             }
         });
     });
 }
+exports.queryBrowserTabs = queryBrowserTabs;
+/**Attaches the event handler that is fired when a tab is activated */
+function addBrowserTabsOnActivatedHandler(callback) {
+    if (browserName == firefoxBrowser) {
+        browser.tabs.onActivated.addListener(callback);
+    }
+    else if (browserName == chromeBrowser) {
+        chrome.tabs.onActivated.addListener(callback);
+    }
+}
+exports.addBrowserTabsOnActivatedHandler = addBrowserTabsOnActivatedHandler;
+/**Attaches the event handler that is fired when a tab is removed */
+function addBrowserTabsOnRemovedHandler(callback) {
+    if (browserName == firefoxBrowser) {
+        browser.tabs.onRemoved.addListener(callback);
+    }
+    else if (browserName == chromeBrowser) {
+        chrome.tabs.onRemoved.addListener(callback);
+    }
+}
+exports.addBrowserTabsOnRemovedHandler = addBrowserTabsOnRemovedHandler;
+/**Attaches the event handler that is fired when a tab is updated */
+function addBrowserTabsOnUpdatedHandler(callback) {
+    if (browserName == firefoxBrowser) {
+        browser.tabs.onUpdated.addListener(callback);
+    }
+    else if (browserName == chromeBrowser) {
+        chrome.tabs.onUpdated.addListener(callback);
+    }
+}
+exports.addBrowserTabsOnUpdatedHandler = addBrowserTabsOnUpdatedHandler;
 /**Returns the tempus object */
 function fetchTempusObject() {
     return __awaiter(this, void 0, void 0, function () {

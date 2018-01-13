@@ -59,7 +59,7 @@ async function toggleTabsActiveState(tempusTabs: baseStructs.tempusStruct[], act
 }
 
 /**Handles a tab updation event of the browser */
-async function handleTabUpdation(tabId: number, changeInfo: baseStructs.changeInfo, tab: browser.tabs.Tab) {
+async function handleTabUpdation(tabId: number, changeInfo: baseStructs.changeInfo, tab: any) {
     await commons.closePreviouslyUnclosedTabs();
     await commons.updateOpenTabs();
     if (changeInfo.status === "complete") {
@@ -78,10 +78,10 @@ async function handleTabUpdation(tabId: number, changeInfo: baseStructs.changeIn
 
 /**Function that fetches all the available tabs and processes them */
 async function recountAllActiveTabs() {
-    let temp = await browser.tabs.query({
+    let temp = await commons.queryBrowserTabs({
         active: true
-    });
-    let allTabs = temp.map(tab => {
+    })
+    let allTabs = temp.map(function (tab: any) {
         let localTab = <baseStructs.tempusStruct>{
             domain: commons.returnDomainFromURL(tab.url),
             active: tab.active,
@@ -97,12 +97,12 @@ async function recountAllActiveTabs() {
 }
 
 // Create the event handler for onActivated
-browser.tabs.onActivated.addListener(recountAllActiveTabs);
+commons.addBrowserTabsOnActivatedHandler(recountAllActiveTabs);
 
 // Create the event handler for onRemoved
-browser.tabs.onRemoved.addListener(recountAllActiveTabs);
+commons.addBrowserTabsOnRemovedHandler(recountAllActiveTabs);
 
 // Create the event handler for onUpdated
-browser.tabs.onUpdated.addListener(handleTabUpdation)
+commons.addBrowserTabsOnUpdatedHandler(handleTabUpdation);
 
 commons.onFirstLoad();
