@@ -1,4 +1,102 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*!
+ * chrome-promise
+ * https://github.com/tfoxy/chrome-promise
+ *
+ * Copyright 2015 Tomás Fox
+ * Released under the MIT license
+ */
+
+(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define([], factory.bind(null, typeof exports === 'object' ? this : root));
+  } else if (typeof exports === 'object') {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory(this);
+  } else {
+    // Browser globals (root is window)
+    root.ChromePromise = factory(root);
+  }
+}(this, function(root) {
+  'use strict';
+  var slice = Array.prototype.slice,
+      hasOwnProperty = Object.prototype.hasOwnProperty;
+
+  // Temporary hacky fix to make TypeScript `import` work
+  ChromePromise.default = ChromePromise;
+
+  return ChromePromise;
+
+  ////////////////
+
+  function ChromePromise(options) {
+    options = options || {};
+    var chrome = options.chrome || root.chrome;
+    var Promise = options.Promise || root.Promise;
+    var runtime = chrome.runtime;
+
+    fillProperties(chrome, this);
+
+    ////////////////
+
+    function setPromiseFunction(fn, thisArg) {
+
+      return function() {
+        var args = slice.call(arguments);
+
+        return new Promise(function(resolve, reject) {
+          args.push(callback);
+
+          fn.apply(thisArg, args);
+
+          function callback() {
+            var err = runtime.lastError;
+            var results = slice.call(arguments);
+            if (err) {
+              reject(err);
+            } else {
+              switch (results.length) {
+                case 0:
+                  resolve();
+                  break;
+                case 1:
+                  resolve(results[0]);
+                  break;
+                default:
+                  resolve(results);
+              }
+            }
+          }
+        });
+
+      };
+
+    }
+
+    function fillProperties(source, target) {
+      for (var key in source) {
+        if (hasOwnProperty.call(source, key)) {
+          var val = source[key];
+          var type = typeof val;
+
+          if (type === 'object' && !(val instanceof ChromePromise)) {
+            target[key] = {};
+            fillProperties(val, target[key]);
+          } else if (type === 'function') {
+            target[key] = setPromiseFunction(val, source);
+          } else {
+            target[key] = val;
+          }
+        }
+      }
+    }
+  }
+}));
+
+},{}],2:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,6 +134,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var chrome_promise_1 = require("chrome-promise");
+var chromep = new chrome_promise_1.default();
 /**Stores the list of URLs */
 exports.tempusObjectID = "tempusArray";
 exports.tempusRefresherID = "tempusRefresher";
@@ -62,20 +162,10 @@ function getStorage() {
                     return [4 /*yield*/, browser.storage.local.get()];
                 case 1: return [2 /*return*/, _a.sent()];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.storage.local.get(function (items) {
-                                        resolve(items);
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/, {}];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.storage.local.get()];
+                case 3: return [2 /*return*/, _a.sent()];
+                case 4: return [2 /*return*/, {}];
             }
         });
     });
@@ -90,22 +180,14 @@ function setStorage(storageObject) {
                     return [4 /*yield*/, browser.storage.local.set(storageObject)];
                 case 1:
                     _a.sent();
-                    return [3 /*break*/, 3];
+                    return [3 /*break*/, 4];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.storage.local.set(storageObject, function () {
-                                        resolve();
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.storage.local.set(storageObject)];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
             }
         });
     });
@@ -120,22 +202,14 @@ function clearStorage() {
                     return [4 /*yield*/, browser.storage.local.clear()];
                 case 1:
                     _a.sent();
-                    return [3 /*break*/, 3];
+                    return [3 /*break*/, 4];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.storage.local.clear(function () {
-                                        resolve();
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.storage.local.clear()];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
             }
         });
     });
@@ -161,22 +235,14 @@ function clearBrowserAlarm(alarmName) {
                     return [4 /*yield*/, browser.alarms.clear(alarmName)];
                 case 1:
                     _a.sent();
-                    return [3 /*break*/, 3];
+                    return [3 /*break*/, 4];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.alarms.clear(alarmName, function (wasCleared) {
-                                        resolve();
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.alarms.clear(alarmName)];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
             }
         });
     });
@@ -191,20 +257,10 @@ function queryBrowserTabs(obj) {
                     return [4 /*yield*/, browser.tabs.query(obj)];
                 case 1: return [2 /*return*/, _a.sent()];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.tabs.query(obj, function (result) {
-                                        resolve(result);
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/, []];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.tabs.query(obj)];
+                case 3: return [2 /*return*/, _a.sent()];
+                case 4: return [2 /*return*/, []];
             }
         });
     });
@@ -451,7 +507,7 @@ exports.updateOpenTabs = updateOpenTabs;
 // Alarms
 /**Creates the alarm */
 function createAlarm() {
-    createBrowserAlarm(exports.refreshAlarm, { delayInMinutes: exports.refreshDelayInMins }, refreshTimestamp);
+    createBrowserAlarm(exports.refreshAlarm, { when: new Date().getTime() + refreshDelayInMilliSeconds }, refreshTimestamp);
 }
 /**Resets the alarms */
 function resetAlarm() {
@@ -535,7 +591,7 @@ function __deleteStorage() {
 }
 exports.__deleteStorage = __deleteStorage;
 
-},{}],2:[function(require,module,exports){
+},{"chrome-promise":1}],3:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -809,6 +865,6 @@ setInterval(function () {
     main();
 }, 2000);
 
-},{"./commons":1}]},{},[2])
+},{"./commons":2}]},{},[3])
 
 //# sourceMappingURL=ui.src.js.map

@@ -1,5 +1,8 @@
 import tabStructs = require('./tab-structs');
 import baseStructs = require('./base-structs');
+import ChromePromise from 'chrome-promise';
+
+const chromep = new ChromePromise();
 
 /**Stores the list of URLs */
 export const tempusObjectID = "tempusArray";
@@ -25,15 +28,7 @@ async function getStorage(): Promise<Object> {
     if (browserName == firefoxBrowser) {
         return await browser.storage.local.get();
     } else if (browserName == chromeBrowser) {
-        return new Promise(function (resolve, reject) {
-            try {
-                chrome.storage.local.get(function (items) {
-                    resolve(items);
-                });
-            } catch (e) {
-                reject(e);
-            }
-        });
+        return await chromep.storage.local.get();
     }
     return {};
 }
@@ -43,15 +38,7 @@ async function setStorage(storageObject: any): Promise<void> {
     if (browserName == firefoxBrowser) {
         await browser.storage.local.set(storageObject);
     } else if (browserName == chromeBrowser) {
-        return new Promise<void>(function (resolve, reject) {
-            try {
-                chrome.storage.local.set(storageObject, function () {
-                    resolve();
-                });
-            } catch (e) {
-                reject(e);
-            }
-        });
+        await chromep.storage.local.set(storageObject);
     }
 }
 
@@ -60,15 +47,7 @@ async function clearStorage(): Promise<void> {
     if (browserName == firefoxBrowser) {
         await browser.storage.local.clear();
     } else if (browserName == chromeBrowser) {
-        return new Promise<void>(function (resolve, reject) {
-            try {
-                chrome.storage.local.clear(function () {
-                    resolve();
-                });
-            } catch (e) {
-                reject(e);
-            }
-        });
+        await chromep.storage.local.clear();
     }
 }
 
@@ -88,15 +67,7 @@ async function clearBrowserAlarm(alarmName: string) {
     if (browserName == firefoxBrowser) {
         await browser.alarms.clear(alarmName);
     } else if (browserName == chromeBrowser) {
-        return new Promise<void>(function (resolve, reject) {
-            try {
-                chrome.alarms.clear(alarmName, function (wasCleared: boolean) {
-                    resolve();
-                });
-            } catch (e) {
-                reject(e);
-            }
-        })
+        await chromep.alarms.clear(alarmName);
     }
 }
 
@@ -105,15 +76,7 @@ export async function queryBrowserTabs(obj: Object): Promise<Object[]> {
     if (browserName == firefoxBrowser) {
         return await browser.tabs.query(obj);
     } else if (browserName == chromeBrowser) {
-        return new Promise<Object[]>(function (resolve, reject) {
-            try {
-                chrome.tabs.query(<any>obj, function (result) {
-                    resolve(result);
-                })
-            } catch (e) {
-                reject(e);
-            }
-        });
+        return await chromep.tabs.query(obj);
     }
     return [];
 }
@@ -277,12 +240,9 @@ export async function updateOpenTabs() {
 }
 
 // Alarms
-
-
-
 /**Creates the alarm */
 function createAlarm() {
-    createBrowserAlarm(refreshAlarm, { delayInMinutes: refreshDelayInMins }, refreshTimestamp);
+    createBrowserAlarm(refreshAlarm, { when: new Date().getTime() + refreshDelayInMilliSeconds }, refreshTimestamp);
 }
 
 /**Resets the alarms */

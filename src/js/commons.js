@@ -35,6 +35,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var chrome_promise_1 = require("chrome-promise");
+var chromep = new chrome_promise_1.default();
 /**Stores the list of URLs */
 exports.tempusObjectID = "tempusArray";
 exports.tempusRefresherID = "tempusRefresher";
@@ -61,20 +63,10 @@ function getStorage() {
                     return [4 /*yield*/, browser.storage.local.get()];
                 case 1: return [2 /*return*/, _a.sent()];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.storage.local.get(function (items) {
-                                        resolve(items);
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/, {}];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.storage.local.get()];
+                case 3: return [2 /*return*/, _a.sent()];
+                case 4: return [2 /*return*/, {}];
             }
         });
     });
@@ -89,22 +81,14 @@ function setStorage(storageObject) {
                     return [4 /*yield*/, browser.storage.local.set(storageObject)];
                 case 1:
                     _a.sent();
-                    return [3 /*break*/, 3];
+                    return [3 /*break*/, 4];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.storage.local.set(storageObject, function () {
-                                        resolve();
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.storage.local.set(storageObject)];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
             }
         });
     });
@@ -119,22 +103,14 @@ function clearStorage() {
                     return [4 /*yield*/, browser.storage.local.clear()];
                 case 1:
                     _a.sent();
-                    return [3 /*break*/, 3];
+                    return [3 /*break*/, 4];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.storage.local.clear(function () {
-                                        resolve();
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.storage.local.clear()];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
             }
         });
     });
@@ -160,22 +136,14 @@ function clearBrowserAlarm(alarmName) {
                     return [4 /*yield*/, browser.alarms.clear(alarmName)];
                 case 1:
                     _a.sent();
-                    return [3 /*break*/, 3];
+                    return [3 /*break*/, 4];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.alarms.clear(alarmName, function (wasCleared) {
-                                        resolve();
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.alarms.clear(alarmName)];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
             }
         });
     });
@@ -190,20 +158,10 @@ function queryBrowserTabs(obj) {
                     return [4 /*yield*/, browser.tabs.query(obj)];
                 case 1: return [2 /*return*/, _a.sent()];
                 case 2:
-                    if (browserName == chromeBrowser) {
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                try {
-                                    chrome.tabs.query(obj, function (result) {
-                                        resolve(result);
-                                    });
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            })];
-                    }
-                    _a.label = 3;
-                case 3: return [2 /*return*/, []];
+                    if (!(browserName == chromeBrowser)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, chromep.tabs.query(obj)];
+                case 3: return [2 /*return*/, _a.sent()];
+                case 4: return [2 /*return*/, []];
             }
         });
     });
@@ -450,7 +408,7 @@ exports.updateOpenTabs = updateOpenTabs;
 // Alarms
 /**Creates the alarm */
 function createAlarm() {
-    createBrowserAlarm(exports.refreshAlarm, { delayInMinutes: exports.refreshDelayInMins }, refreshTimestamp);
+    createBrowserAlarm(exports.refreshAlarm, { when: new Date().getTime() + refreshDelayInMilliSeconds }, refreshTimestamp);
 }
 /**Resets the alarms */
 function resetAlarm() {
